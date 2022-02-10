@@ -30,15 +30,14 @@ class LED_Strip
     LED_Strip();
     LED_Strip(const uint8_t &,const uint16_t *);
     ~LED_Strip();
-    void send(const uint8_t & ,std:: vector<char>& );
-    void sendToStrip(const uint8_t &,std:: vector<char> &);
-    void getSeq(char *, std::vector<char> &);
-  
+    void send(std:: vector<char>* & );
+    void sendToStrip(std:: vector<char>* &);
+    void getSeq(char *, std::vector<char>* &);
   private:
     int serial_port ;
     uint8_t _nStrips;
     uint16_t *_nLEDs;
-    uint16_t MAX;
+    uint16_t total;
 };
 
 #endif // _LED_STRIP_H_

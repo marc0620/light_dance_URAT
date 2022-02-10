@@ -30,27 +30,30 @@ using namespace std;
 LED_Strip::LED_Strip(const uint8_t &nStrips, const uint16_t *nLEDs) : _nStrips(nStrips)
 {
 	// uart
+	total=0;
 	if ((serial_port = serialOpen ("/dev/ttyS0", 1000000)) < 0)	/* open serial port */
-  {
-    fprintf (stderr, "Unable to open serial device: %s\n", strerror (errno)) ;
-		exit(-1);
+  	{
+		fprintf (stderr, "Unable to open serial device: %s\n", strerror (errno)) ;
+			exit(-1);
 	}
-  if (wiringPiSetup () == -1)					/* initializes wiringPi setup */
-  {
-    fprintf (stdout, "Unable to start wiringPi: %s\n", strerror (errno)) ;
-		exit(-1);
-  }
+	if (wiringPiSetup () == -1)					/* initializes wiringPi setup */
+	{
+		fprintf (stdout, "Unable to start wiringPi: %s\n", strerror (errno)) ;
+			exit(-1);
+	}
 
 	_nLEDs = new uint16_t[nStrips];
 	uint16_t m=0;
-	for (uint8_t i = 0; i < nStrips; ++i){
-		_nLEDs[i] = nLEDs[i];
-		if (nLEDs[i]*3>m){
-			m=nLEDs[i]*3;
-			cout<<m<<endl;
+	//initializing
+	for(int i=0;i<3;i++){
+		serialPutchar(serial_port,(char)255);
+		for (uint8_t i = 0; i < nStrips; ++i){
+			serialPutchar(serial_port,nLEDs[i]);
+			total+=nLEDs[i];
 		}
-		MAX=m;
+		serialPutchar(serial_port,(char)255);
 	}
+	
 }
 
 LED_Strip::~LED_Strip()
@@ -65,19 +68,17 @@ LED_Strip::~LED_Strip()
 
   @note strip ID from 0 to nStrips - 1
 */
-void LED_Strip::send (const uint8_t &id, std::vector<char>& color){
-	char buf[MAX] = {0};
+void LED_Strip::send (std::vector<char>* & color){
+	char buf[total] = {0};
 	getSeq(buf,color);
-	serialPutchar(serial_port,(char)255);
-	serialPutchar(serial_port,(char)id);
-	for(int i=0;i<MAX;i++)serialPutchar(serial_port,(char)buf[i]);
-	for (int a = 0; a < color.size(); a++) std::cout << (unsigned short)buf[a] << " ";
-		std::cout << std::endl;
+	for(int i=0;i<total;i++)serialPutchar(serial_port,(char)buf[i]);
+	// for (int a = 0; a < color.size(); a++) std::cout << (unsigned short)buf[a] << " ";
+	// 	std::cout << std::endl;
 }
 
-void LED_Strip::sendToStrip(const uint8_t &id, std::vector<char>& color)
+void LED_Strip::sendToStrip(std::vector<char>* & color)
 {
-	send(id,color);
+	send(color);
 }
 
 
@@ -88,11 +89,17 @@ void LED_Strip::sendToStrip(const uint8_t &id, std::vector<char>& color)
   @param seq   Pixel secquence to send
   @param color Output dataframe
 */
-void LED_Strip::getSeq(char *seq, std:: vector<char>& color)
+void LED_Strip::getSeq(char *seq, std:: vector<char>* & color)
 {
-	for (int i = 0 ; i < color.size(); ++i)
+	int count=0;
+	for (int i = 0 ; i < color->size(); ++i)
 	{
-		seq[i + DATA_OFFSET] = color[i]*LED_BRIGHTNESS_SCALE ;
+		for(int j=0;j<color[i].size();++j){
+			seq[count + DATA_OFFSET] = color[i][j]*LED_BRIGHTNESS_SCALE ;
+			count++;
+		}
+		cout<<count<<endl;
 	}
-
+	// cout<<"input: "<<color[0].size()<<" "<<color[1].size()<<color[2].size()<<endl;
+	// cout<<count<<endl;
 }

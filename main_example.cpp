@@ -1,20 +1,19 @@
 #include <iostream>
 #include <time.h>
 #include "LED_strip.h"
-#define NSTRIPS 13
+#define NSTRIPS 3
+
 using namespace std;
 
 double wait = 0.005;
 const uint8_t nStrips = NSTRIPS;
-uint16_t nLeds[NSTRIPS]={87,87,87,87,87,87,87,87,87,87,87,87,87};
+const uint16_t nLeds[NSTRIPS]={1,2,3};
 
 vector<char>* buf;
 
 
 LED_Strip strips(nStrips, nLeds);
 int main(){
-	
-	printf("in main");
 	int num = 0;
 	buf = new vector<char> [nStrips];
 	for(int i = 0; i < nStrips; i++){
@@ -72,17 +71,15 @@ int main(){
 		for (int i = 0; i < nStrips; ++i) { 
 			for (int j = 0; j < nLeds[i] * 3; ++j)
 					buf[i][j]=(char)100;
-			strips.sendToStrip(i, buf[i]);
-			usleep(10*1000);
 		}
-		usleep(50*1000);
+		strips.sendToStrip(buf);
+		usleep(500*1000);
 		for (int i = 0; i < nStrips; ++i) { 
 			for (int j = 0; j < nLeds[i] * 3; ++j)
 					buf[i][j]=(char)0;
-			strips.sendToStrip(i, buf[i]);
-			usleep(10*1000);
 		}
-		usleep(50*1000);
+		strips.sendToStrip(buf);
+		usleep(500*1000);
 	}
 	
 }
